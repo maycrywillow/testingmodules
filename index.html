@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Optimizer</title>
+    <!-- Load Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .scrollable-results {
+            max-height: 400px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Container -->
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl transform transition-transform duration-300 hover:scale-105">
+
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-6">
+            Game Module Optimizer
+        </h1>
+
+        <!-- Input Form -->
+        <div class="space-y-4 mb-6">
+            <div>
+                <label for="numModules" class="block text-sm font-medium text-gray-700">Number of Modules to Use (2-4)</label>
+                <input type="number" id="numModules" value="2" min="2" max="4" class="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+            </div>
+            <div>
+                <label for="priorityEffects" class="block text-sm font-medium text-gray-700">Priority Effects (comma-separated)</label>
+                <input type="text" id="priorityEffects" placeholder="e.g., Atk, Spd, Def" class="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+            </div>
+            <button id="optimizeButton" class="w-full bg-blue-600 text-white font-semibold p-3 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                Find Optimal Setup
+            </button>
+        </div>
+
+        <!-- Status and Results Section -->
+        <div id="statusContainer" class="text-center text-sm mb-4">
+            <p id="statusMessage" class="text-gray-500">Enter your preferences and click the button.</p>
+        </div>
+        <div id="resultsContainer" class="hidden bg-gray-100 p-4 rounded-xl shadow-inner scrollable-results">
+            <h3 class="font-bold text-lg mb-2">Calculation Results</h3>
+            <p id="totalScore" class="text-gray-700 mb-2"></p>
+            <div id="moduleList" class="space-y-2 mb-4"></div>
+            <p id="combinedEffects" class="font-semibold text-gray-700 mb-1">Combined Effects:</p>
+            <ul id="combinedEffectsList" class="list-disc list-inside text-gray-600 pl-4"></ul>
+        </div>
+
+    </div>
+
+    <!-- JavaScript logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const numModulesInput = document.getElementById('numModules');
+            const priorityEffectsInput = document.getElementById('priorityEffects');
+            const optimizeButton = document.getElementById('optimizeButton');
+            const statusMessage = document.getElementById('statusMessage');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const totalScoreElem = document.getElementById('totalScore');
+            const moduleListElem = document.getElementById('moduleList');
+            const combinedEffectsListElem = document.getElementById('combinedEffectsList');
+            
+            // Hardcoded module data, replacing the Google Sheet connection
+            const modules = [
+                { id: "Module 1", effects: [{ name: "Atk", level: 5 }, { name: "Crt", level: 3 }] },
+                { id: "Module 2", effects: [{ name: "Spd", level: 4 }, { name: "Atk", level: 2 }] },
+                { id: "Module 3", effects: [{ name: "Def", level: 6 }] },
+                { id: "Module 4", effects: [{ name: "Atk", level: 3 }, { name: "Spd", level: 2 }, { name: "Def", level: 1 }] },
+                { id: "Module 5", effects: [{ name: "Crt", level: 4 }, { name: "Spd", level: 1 }] },
+                { id: "Module 6", effects: [{ name: "Def", level: 2 }, { name: "Crt", level: 2 }] },
+                { id: "Module 7", effects: [{ name: "Atk", level: 10 }] },
+                { id: "Module 8", effects: [{ name: "Spd", level: 8 }, { name: "Atk", level: 1 }] },
+            ];
+
+            optimizeButton.addEventListener('click', findOptimalModules);
+
+            function findOptimalModules() {
+                const numModules = parseInt(numModulesInput.value);
+                const priorityEffects = priorityEffectsInput.value.split(',').map(name => name.trim()).filter(Boolean);
+
+                // Basic validation
+                if (isNaN(numModules) || numModules < 2 || numModules > 4) {
+                    showStatus('Please enter a number between 2 and 4 for the number of modules.', true);
+                    return;
+                }
+                if (modules.length < numModules) {
+                    showStatus(`You need at least ${numModules} modules to run the calculation.`, true);
+                    return;
+                }
+
+                showStatus('Calculating...', false);
+                resultsContainer.classList.add('hidden');
+                
+                let bestCombination = null;
+                let maxScore = -1;
+                
+                const combinations = getCombinations(modules, numModules);
+                
+                for (let i = 0; i < combinations.length; i++) {
+                    const combination = combinations[i];
+                    const score = calculateScore(combination, priorityEffects);
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestCombination = combination;
+                    }
+                }
+                
+                displayResults(bestCombination, maxScore, priorityEffects);
+            }
+
+            function displayResults(bestCombination, maxScore, priorityEffects) {
+                if (!bestCombination) {
+                    showStatus('Could not find a valid combination. Please check your data.', true);
+                    return;
+                }
+
+                totalScoreElem.textContent = `Total Score: ${maxScore}`;
+                moduleListElem.innerHTML = '';
+                combinedEffectsListElem.innerHTML = '';
+
+                // Display optimal modules
+                bestCombination.forEach(module => {
+                    const moduleCard = document.createElement('div');
+                    moduleCard.className = 'bg-white p-3 rounded-lg shadow-md';
+                    const effectsString = module.effects.map(e => `${e.name} (${e.level})`).join(' | ');
+                    moduleCard.innerHTML = `<p class="font-semibold">${module.id}</p><p class="text-sm text-gray-500">${effectsString}</p>`;
+                    moduleListElem.appendChild(moduleCard);
+                });
+
+                // Display combined effects
+                const combinedEffects = getCombinedEffects(bestCombination);
+                const allEffects = Object.keys(combinedEffects).map(effectName => [effectName, combinedEffects[effectName]]);
+                allEffects.forEach(([name, level]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${name}: ${level}`;
+                    if (priorityEffects.includes(name)) {
+                        li.className = 'font-bold text-green-700';
+                    }
+                    combinedEffectsListElem.appendChild(li);
+                });
+
+                showStatus(`Calculation complete! Found optimal setup with a total score of ${maxScore}.`);
+                resultsContainer.classList.remove('hidden');
+            }
+
+            function showStatus(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.className = isError ? 'text-red-500' : 'text-gray-500';
+                if (message === 'Calculating...') {
+                    statusMessage.innerHTML += ' <span class="loader ml-2 inline-block"></span>';
+                }
+            }
+            
+            // --- Helper Functions from your original script, translated to JS ---
+            function calculateScore(combination, priorityEffects) {
+                const combinedEffects = getCombinedEffects(combination);
+                let totalScore = 0;
+                const tierScores = { '1': 1, '4': 4, '8': 8, '12': 12, '16': 16, '20': 20 };
+                const PRIORITY_MULTIPLIERS = [10, 7, 5, 3, 2];
+                for (const effectName in combinedEffects) {
+                    const level = combinedEffects[effectName];
+                    let effectScore = 0;
+                    if (level >= 20) effectScore = tierScores['20'];
+                    else if (level >= 16) effectScore = tierScores['16'];
+                    else if (level >= 12) effectScore = tierScores['12'];
+                    else if (level >= 8) effectScore = tierScores['8'];
+                    else if (level >= 4) effectScore = tierScores['4'];
+                    else if (level >= 1) effectScore = tierScores['1'];
+                    const priorityIndex = priorityEffects.indexOf(effectName);
+                    if (priorityIndex !== -1 && priorityIndex < PRIORITY_MULTIPLIERS.length) {
+                        effectScore *= PRIORITY_MULTIPLIERS[priorityIndex];
+                    }
+                    totalScore += effectScore;
+                }
+                return totalScore;
+            }
+
+            function getCombinedEffects(combination) {
+                const combinedEffects = {};
+                combination.forEach(module => {
+                    module.effects.forEach(effect => {
+                        if (effect.name && effect.level) {
+                            if (!combinedEffects[effect.name]) {
+                                combinedEffects[effect.name] = 0;
+                            }
+                            combinedEffects[effect.name] += effect.level;
+                        }
+                    });
+                });
+                return combinedEffects;
+            }
+
+            function getCombinations(arr, k) {
+                const result = [];
+                function backtrack(start, combo) {
+                    if (combo.length === k) {
+                        result.push([...combo]);
+                        return;
+                    }
+                    for (let i = start; i < arr.length; i++) {
+                        combo.push(arr[i]);
+                        backtrack(i + 1, combo);
+                        combo.pop();
+                    }
+                }
+                backtrack(0, []);
+                return result;
+            }
+        });
+    </script>
+</body>
+</html>
