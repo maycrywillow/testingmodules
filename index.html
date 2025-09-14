@@ -47,8 +47,31 @@
                 <input type="number" id="numModules" value="2" min="2" max="4" class="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
             </div>
             <div>
-                <label for="priorityEffects" class="block text-sm font-medium text-gray-700">Priority Effects (comma-separated)</label>
-                <input type="text" id="priorityEffects" placeholder="e.g., Atk, Spd, Def" class="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                <label for="priorityEffects" class="block text-sm font-medium text-gray-700">Priority Effects</label>
+                <!-- Multi-select dropdown for priority effects -->
+                <select id="priorityEffects" multiple size="5" class="mt-1 block w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                    <option value="Agility Bonus">Agility Bonus</option>
+                    <option value="Attack Speed Focus">Attack Speed Focus</option>
+                    <option value="Critical Focus">Critical Focus</option>
+                    <option value="Elite Strike">Elite Strike</option>
+                    <option value="Extreme Despair Guard">Extreme Despair Guard</option>
+                    <option value="Extreme First Aid">Extreme First Aid</option>
+                    <option value="Extreme Flexible Movements">Extreme Flexible Movements</option>
+                    <option value="Extreme Life Condensation">Extreme Life Condensation</option>
+                    <option value="Extreme Life Drain">Extreme Life Drain</option>
+                    <option value="Extreme Life Fluctuation">Extreme Life Fluctuation</option>
+                    <option value="Extreme Dmg Stacking">Extreme Dmg Stacking</option>
+                    <option value="Extreme Team Luck">Extreme Team Luck</option>
+                    <option value="Intellect Bonus">Intellect Bonus</option>
+                    <option value="Lucky Focus">Lucky Focus</option>
+                    <option value="Magical Resistance">Magical Resistance</option>
+                    <option value="Physical Resistance">Physical Resistance</option>
+                    <option value="Special Attack Dmg Bonus">Special Attack Dmg Bonus</option>
+                    <option value="Special Healing Bonus">Special Healing Bonus</option>
+                    <option value="Specialization Healing Bonus">Specialization Healing Bonus</option>
+                    <option value="Spellcasting Focus">Spellcasting Focus</option>
+                    <option value="Strength Bonus">Strength Bonus</option>
+                </select>
             </div>
             <button id="optimizeButton" class="w-full bg-blue-600 text-white font-semibold p-3 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
                 Find Optimal Setup
@@ -73,7 +96,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const numModulesInput = document.getElementById('numModules');
-            const priorityEffectsInput = document.getElementById('priorityEffects');
+            const priorityEffectsSelect = document.getElementById('priorityEffects');
             const optimizeButton = document.getElementById('optimizeButton');
             const statusMessage = document.getElementById('statusMessage');
             const resultsContainer = document.getElementById('resultsContainer');
@@ -97,7 +120,10 @@
 
             function findOptimalModules() {
                 const numModules = parseInt(numModulesInput.value);
-                const priorityEffects = priorityEffectsInput.value.split(',').map(name => name.trim()).filter(Boolean);
+                // Get selected options from the new multi-select element
+                const priorityEffects = Array.from(priorityEffectsSelect.options)
+                                              .filter(option => option.selected)
+                                              .map(option => option.value);
 
                 // Basic validation
                 if (isNaN(numModules) || numModules < 2 || numModules > 4) {
