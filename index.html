@@ -29,65 +29,78 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .dropdown-options {
+            max-height: 180px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4">
 
     <!-- Main Container -->
-    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-2xl transform transition-transform duration-300 hover:scale-105">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-4xl transform transition-transform duration-300 hover:scale-105">
 
         <h1 class="text-3xl sm:text-4xl font-bold text-center text-gray-800 mb-6">
             Game Module Optimizer
         </h1>
 
-        <!-- Input Form -->
-        <div class="space-y-4 mb-6">
-            <div>
-                <label for="numModules" class="block text-sm font-medium text-gray-700">Number of Modules to Use (2-4)</label>
-                <input type="number" id="numModules" value="2" min="2" max="4" class="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+        <!-- Input Form and Results Section -->
+        <div class="mb-6 flex flex-col md:flex-row md:space-x-8 space-y-4 md:space-y-0">
+            <!-- Left Column: Priority Effects -->
+            <div class="w-full md:w-1/2 space-y-4">
+                <div class="relative">
+                    <label for="priorityEffect1" class="block text-sm font-medium text-gray-700">Priority Effect 1</label>
+                    <input type="text" id="priorityEffect1" placeholder="Click or type to select..." class="mt-1 block w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                    <div id="dropdown1" class="absolute z-10 hidden w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg dropdown-options"></div>
+                </div>
+                <div class="relative">
+                    <label for="priorityEffect2" class="block text-sm font-medium text-gray-700">Priority Effect 2</label>
+                    <input type="text" id="priorityEffect2" placeholder="Click or type to select..." class="mt-1 block w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                    <div id="dropdown2" class="absolute z-10 hidden w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg dropdown-options"></div>
+                </div>
+                <div class="relative">
+                    <label for="priorityEffect3" class="block text-sm font-medium text-gray-700">Priority Effect 3</label>
+                    <input type="text" id="priorityEffect3" placeholder="Click or type to select..." class="mt-1 block w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                    <div id="dropdown3" class="absolute z-10 hidden w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg dropdown-options"></div>
+                </div>
+                <div class="relative">
+                    <label for="priorityEffect4" class="block text-sm font-medium text-gray-700">Priority Effect 4</label>
+                    <input type="text" id="priorityEffect4" placeholder="Click or type to select..." class="mt-1 block w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                    <div id="dropdown4" class="absolute z-10 hidden w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg dropdown-options"></div>
+                </div>
+                
+                <!-- New checkbox option -->
+                <div class="flex items-center mt-6">
+                    <input id="optimizeTotalLevel" type="checkbox" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded-md">
+                    <label for="optimizeTotalLevel" class="ml-2 block text-sm font-medium text-gray-700">
+                        Optimize total level as well?
+                    </label>
+                </div>
+                
+                <!-- Main button moved to be responsive with the form columns -->
+                <button id="optimizeButton" class="w-full bg-blue-600 text-white font-semibold p-3 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 mt-4 md:mt-0">
+                    Find Optimal Setup
+                </button>
+                <div id="statusContainer" class="text-center text-sm mb-4 mt-6">
+                    <p id="statusMessage" class="text-gray-500">Enter your preferences and click the button.</p>
+                </div>
             </div>
-            <div>
-                <label for="priorityEffects" class="block text-sm font-medium text-gray-700">Priority Effects</label>
-                <!-- Multi-select dropdown for priority effects -->
-                <select id="priorityEffects" multiple size="5" class="mt-1 block w-full p-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
-                    <option value="Agility Bonus">Agility Bonus</option>
-                    <option value="Attack Speed Focus">Attack Speed Focus</option>
-                    <option value="Critical Focus">Critical Focus</option>
-                    <option value="Elite Strike">Elite Strike</option>
-                    <option value="Extreme Despair Guard">Extreme Despair Guard</option>
-                    <option value="Extreme First Aid">Extreme First Aid</option>
-                    <option value="Extreme Flexible Movements">Extreme Flexible Movements</option>
-                    <option value="Extreme Life Condensation">Extreme Life Condensation</option>
-                    <option value="Extreme Life Drain">Extreme Life Drain</option>
-                    <option value="Extreme Life Fluctuation">Extreme Life Fluctuation</option>
-                    <option value="Extreme Dmg Stacking">Extreme Dmg Stacking</option>
-                    <option value="Extreme Team Luck">Extreme Team Luck</option>
-                    <option value="Intellect Bonus">Intellect Bonus</option>
-                    <option value="Lucky Focus">Lucky Focus</option>
-                    <option value="Magical Resistance">Magical Resistance</option>
-                    <option value="Physical Resistance">Physical Resistance</option>
-                    <option value="Special Attack Dmg Bonus">Special Attack Dmg Bonus</option>
-                    <option value="Special Healing Bonus">Special Healing Bonus</option>
-                    <option value="Specialization Healing Bonus">Specialization Healing Bonus</option>
-                    <option value="Spellcasting Focus">Spellcasting Focus</option>
-                    <option value="Strength Bonus">Strength Bonus</option>
-                </select>
-            </div>
-            <button id="optimizeButton" class="w-full bg-blue-600 text-white font-semibold p-3 rounded-xl shadow-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                Find Optimal Setup
-            </button>
-        </div>
 
-        <!-- Status and Results Section -->
-        <div id="statusContainer" class="text-center text-sm mb-4">
-            <p id="statusMessage" class="text-gray-500">Enter your preferences and click the button.</p>
-        </div>
-        <div id="resultsContainer" class="hidden bg-gray-100 p-4 rounded-xl shadow-inner scrollable-results">
-            <h3 class="font-bold text-lg mb-2">Calculation Results</h3>
-            <p id="totalScore" class="text-gray-700 mb-2"></p>
-            <div id="moduleList" class="space-y-2 mb-4"></div>
-            <p id="combinedEffects" class="font-semibold text-gray-700 mb-1">Combined Effects:</p>
-            <ul id="combinedEffectsList" class="list-disc list-inside text-gray-600 pl-4"></ul>
+            <!-- Right Column: Number of Modules and Results -->
+            <div class="w-full md:w-1/2 space-y-4">
+                <div class="w-full">
+                    <label for="numModules" class="block text-sm font-medium text-gray-700">Number of Modules to Use (2-4)</label>
+                    <input type="number" id="numModules" value="2" min="2" max="4" class="mt-1 block w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow">
+                </div>
+                <div id="resultsContainer" class="hidden bg-gray-100 p-4 rounded-xl shadow-inner scrollable-results">
+                    <h3 class="font-bold text-lg mb-2">Calculation Results</h3>
+                    <p id="totalScore" class="text-gray-700 mb-2"></p>
+                    <div id="moduleList" class="space-y-2 mb-4"></div>
+                    <p id="combinedEffects" class="font-semibold text-gray-700 mb-1">Combined Effects:</p>
+                    <ul id="combinedEffectsList" class="list-disc list-inside text-gray-600 pl-4"></ul>
+                </div>
+            </div>
         </div>
 
     </div>
@@ -96,13 +109,35 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const numModulesInput = document.getElementById('numModules');
-            const priorityEffectsSelect = document.getElementById('priorityEffects');
             const optimizeButton = document.getElementById('optimizeButton');
             const statusMessage = document.getElementById('statusMessage');
             const resultsContainer = document.getElementById('resultsContainer');
             const totalScoreElem = document.getElementById('totalScore');
             const moduleListElem = document.getElementById('moduleList');
             const combinedEffectsListElem = document.getElementById('combinedEffectsList');
+            const optimizeTotalLevelCheckbox = document.getElementById('optimizeTotalLevel');
+            
+            const priorityEffectInputs = [
+                document.getElementById('priorityEffect1'),
+                document.getElementById('priorityEffect2'),
+                document.getElementById('priorityEffect3'),
+                document.getElementById('priorityEffect4')
+            ];
+            const dropdowns = [
+                document.getElementById('dropdown1'),
+                document.getElementById('dropdown2'),
+                document.getElementById('dropdown3'),
+                document.getElementById('dropdown4')
+            ];
+
+            // Hardcoded list of all possible effects
+            const allEffects = [
+                "Agility Bonus", "Attack Speed Focus", "Critical Focus", "Elite Strike", "Extreme Despair Guard",
+                "Extreme First Aid", "Extreme Flexible Movements", "Extreme Life Condensation", "Extreme Life Drain",
+                "Extreme Life Fluctuation", "Extreme Dmg Stacking", "Extreme Team Luck", "Intellect Bonus",
+                "Lucky Focus", "Magical Resistance", "Physical Resistance", "Special Attack Dmg Bonus",
+                "Special Healing Bonus", "Specialization Healing Bonus", "Spellcasting Focus", "Strength Bonus"
+            ];
             
             // Hardcoded module data, replacing the Google Sheet connection
             const modules = [
@@ -116,20 +151,97 @@
                 { id: "Module 8", effects: [{ name: "Spd", level: 8 }, { name: "Atk", level: 1 }] },
             ];
 
+            // Initialize dropdowns with filtering logic
+            function setupDropdowns() {
+                priorityEffectInputs.forEach((input, index) => {
+                    const dropdown = dropdowns[index];
+
+                    // Event listener for live filtering
+                    input.addEventListener('input', () => {
+                        const searchText = input.value.toLowerCase();
+                        const selectedValues = priorityEffectInputs.map(i => i.value);
+                        const filteredEffects = allEffects.filter(effect => 
+                            effect.toLowerCase().includes(searchText) && !selectedValues.includes(effect)
+                        );
+                        
+                        dropdown.innerHTML = '';
+                        if (filteredEffects.length > 0) {
+                            filteredEffects.forEach(effect => {
+                                const option = document.createElement('div');
+                                option.className = 'p-2 cursor-pointer hover:bg-blue-100 transition-colors rounded-lg text-sm';
+                                option.textContent = effect;
+                                option.addEventListener('click', () => {
+                                    input.value = effect;
+                                    dropdown.classList.add('hidden');
+                                    // Manually trigger input event to handle duplicate selection logic
+                                    input.dispatchEvent(new Event('input'));
+                                });
+                                dropdown.appendChild(option);
+                            });
+                            dropdown.classList.remove('hidden');
+                        } else {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
+
+                    // Event listener for opening dropdown on focus
+                    input.addEventListener('focus', () => {
+                        const selectedValues = priorityEffectInputs.map(i => i.value);
+                        const availableEffects = allEffects.filter(effect => !selectedValues.includes(effect));
+                        
+                        dropdown.innerHTML = '';
+                        availableEffects.forEach(effect => {
+                            const option = document.createElement('div');
+                            option.className = 'p-2 cursor-pointer hover:bg-blue-100 transition-colors rounded-lg text-sm';
+                            option.textContent = effect;
+                            option.addEventListener('click', () => {
+                                input.value = effect;
+                                dropdown.classList.add('hidden');
+                                input.dispatchEvent(new Event('input'));
+                            });
+                            dropdown.appendChild(option);
+                        });
+                        dropdown.classList.remove('hidden');
+                    });
+
+                    // Hide dropdown on blur
+                    input.addEventListener('blur', (e) => {
+                        setTimeout(() => {
+                            if (!dropdown.contains(document.activeElement)) {
+                                dropdown.classList.add('hidden');
+                            }
+                        }, 100);
+                    });
+                });
+            }
+
             optimizeButton.addEventListener('click', findOptimalModules);
 
             function findOptimalModules() {
                 const numModules = parseInt(numModulesInput.value);
-                // Get selected options from the new multi-select element
-                const priorityEffects = Array.from(priorityEffectsSelect.options)
-                                              .filter(option => option.selected)
-                                              .map(option => option.value);
+                const priorityEffects = priorityEffectInputs.map(input => input.value).filter(effect => effect !== "");
 
                 // Basic validation
                 if (isNaN(numModules) || numModules < 2 || numModules > 4) {
                     showStatus('Please enter a number between 2 and 4 for the number of modules.', true);
                     return;
                 }
+                
+                // Check for duplicate selections
+                const uniqueEffects = new Set(priorityEffects);
+                if (uniqueEffects.size !== priorityEffects.length) {
+                    showStatus('You cannot select the same priority effect more than once.', true);
+                    return;
+                }
+                
+                // Validate against the original list
+                for (const effect of priorityEffects) {
+                    if (!allEffects.includes(effect)) {
+                         showStatus(`"${effect}" is not a valid priority effect. Please select from the list.`, true);
+                         return;
+                    }
+                }
+
                 if (modules.length < numModules) {
                     showStatus(`You need at least ${numModules} modules to run the calculation.`, true);
                     return;
@@ -204,8 +316,12 @@
                 let totalScore = 0;
                 const tierScores = { '1': 1, '4': 4, '8': 8, '12': 12, '16': 16, '20': 20 };
                 const PRIORITY_MULTIPLIERS = [10, 7, 5, 3, 2];
+                let combinedLevelSum = 0;
+
                 for (const effectName in combinedEffects) {
                     const level = combinedEffects[effectName];
+                    combinedLevelSum += level;
+
                     let effectScore = 0;
                     if (level >= 20) effectScore = tierScores['20'];
                     else if (level >= 16) effectScore = tierScores['16'];
@@ -213,12 +329,21 @@
                     else if (level >= 8) effectScore = tierScores['8'];
                     else if (level >= 4) effectScore = tierScores['4'];
                     else if (level >= 1) effectScore = tierScores['1'];
+                    
                     const priorityIndex = priorityEffects.indexOf(effectName);
                     if (priorityIndex !== -1 && priorityIndex < PRIORITY_MULTIPLIERS.length) {
                         effectScore *= PRIORITY_MULTIPLIERS[priorityIndex];
                     }
                     totalScore += effectScore;
                 }
+
+                // Add bonus if the "Optimize total level" checkbox is checked
+                if (optimizeTotalLevelCheckbox.checked) {
+                    // A simple way to add the sum of all levels to the score.
+                    // This gives a bonus for a higher overall sum of effects.
+                    totalScore += combinedLevelSum;
+                }
+
                 return totalScore;
             }
 
@@ -253,6 +378,8 @@
                 backtrack(0, []);
                 return result;
             }
+            
+            setupDropdowns();
         });
     </script>
 </body>
