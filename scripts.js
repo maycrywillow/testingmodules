@@ -1,0 +1,274 @@
+document.addEventListener('DOMContentLoaded', () => {
+            const numModulesInput = document.getElementById('numModules');
+            const optimizeButton = document.getElementById('optimizeButton');
+            const statusMessage = document.getElementById('statusMessage');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const totalScoreElem = document.getElementById('totalScore');
+            const moduleListElem = document.getElementById('moduleList');
+            const combinedEffectsListElem = document.getElementById('combinedEffectsList');
+            const optimizeTotalLevelCheckbox = document.getElementById('optimizeTotalLevel');
+            
+            const priorityEffectInputs = [
+                document.getElementById('priorityEffect1'),
+                document.getElementById('priorityEffect2'),
+                document.getElementById('priorityEffect3'),
+                document.getElementById('priorityEffect4')
+            ];
+            const dropdowns = [
+                document.getElementById('dropdown1'),
+                document.getElementById('dropdown2'),
+                document.getElementById('dropdown3'),
+                document.getElementById('dropdown4')
+            ];
+
+            // Hardcoded list of all possible effects
+            const allEffects = [
+                "Agility Bonus", "Attack Speed Focus", "Critical Focus", "Elite Strike", "Extreme Despair Guard",
+                "Extreme First Aid", "Extreme Flexible Movements", "Extreme Life Condensation", "Extreme Life Drain",
+                "Extreme Life Fluctuation", "Extreme Dmg Stacking", "Extreme Team Luck", "Intellect Bonus",
+                "Lucky Focus", "Magical Resistance", "Physical Resistance", "Special Attack Dmg Bonus",
+                "Special Healing Bonus", "Specialization Healing Bonus", "Spellcasting Focus", "Strength Bonus"
+            ];
+            
+            // Hardcoded module data, replacing the Google Sheet connection
+            const modules = [
+                { id: "Module 1", effects: [{ name: "Atk", level: 5 }, { name: "Crt", level: 3 }] },
+                { id: "Module 2", effects: [{ name: "Spd", level: 4 }, { name: "Atk", level: 2 }] },
+                { id: "Module 3", effects: [{ name: "Def", level: 6 }] },
+                { id: "Module 4", effects: [{ name: "Atk", level: 3 }, { name: "Spd", level: 2 }, { name: "Def", level: 1 }] },
+                { id: "Module 5", effects: [{ name: "Crt", level: 4 }, { name: "Spd", level: 1 }] },
+                { id: "Module 6", effects: [{ name: "Def", level: 2 }, { name: "Crt", level: 2 }] },
+                { id: "Module 7", effects: [{ name: "Atk", level: 10 }] },
+                { id: "Module 8", effects: [{ name: "Spd", level: 8 }, { name: "Atk", level: 1 }] },
+            ];
+
+            // Initialize dropdowns with filtering logic
+            function setupDropdowns() {
+                priorityEffectInputs.forEach((input, index) => {
+                    const dropdown = dropdowns[index];
+
+                    // Event listener for live filtering
+                    input.addEventListener('input', () => {
+                        const searchText = input.value.toLowerCase();
+                        const selectedValues = priorityEffectInputs.map(i => i.value);
+                        const filteredEffects = allEffects.filter(effect => 
+                            effect.toLowerCase().includes(searchText) && !selectedValues.includes(effect)
+                        );
+                        
+                        dropdown.innerHTML = '';
+                        if (filteredEffects.length > 0) {
+                            filteredEffects.forEach(effect => {
+                                const option = document.createElement('div');
+                                option.className = 'p-2 cursor-pointer hover:bg-blue-100 transition-colors rounded-lg text-sm';
+                                option.textContent = effect;
+                                option.addEventListener('click', () => {
+                                    input.value = effect;
+                                    dropdown.classList.add('hidden');
+                                    // Manually trigger input event to handle duplicate selection logic
+                                    input.dispatchEvent(new Event('input'));
+                                });
+                                dropdown.appendChild(option);
+                            });
+                            dropdown.classList.remove('hidden');
+                        } else {
+                            dropdown.classList.add('hidden');
+                        }
+                    });
+
+                    // Event listener for opening dropdown on focus
+                    input.addEventListener('focus', () => {
+                        const selectedValues = priorityEffectInputs.map(i => i.value);
+                        const availableEffects = allEffects.filter(effect => !selectedValues.includes(effect));
+                        
+                        dropdown.innerHTML = '';
+                        availableEffects.forEach(effect => {
+                            const option = document.createElement('div');
+                            option.className = 'p-2 cursor-pointer hover:bg-blue-100 transition-colors rounded-lg text-sm';
+                            option.textContent = effect;
+                            option.addEventListener('click', () => {
+                                input.value = effect;
+                                dropdown.classList.add('hidden');
+                                input.dispatchEvent(new Event('input'));
+                            });
+                            dropdown.appendChild(option);
+                        });
+                        dropdown.classList.remove('hidden');
+                    });
+
+                    // Hide dropdown on blur
+                    input.addEventListener('blur', (e) => {
+                        setTimeout(() => {
+                            if (!dropdown.contains(document.activeElement)) {
+                                dropdown.classList.add('hidden');
+                            }
+                        }, 100);
+                    });
+                });
+            }
+
+            optimizeButton.addEventListener('click', findOptimalModules);
+
+            function findOptimalModules() {
+                const numModules = parseInt(numModulesInput.value);
+                const priorityEffects = priorityEffectInputs.map(input => input.value).filter(effect => effect !== "");
+
+                // Basic validation
+                if (isNaN(numModules) || numModules < 2 || numModules > 4) {
+                    showStatus('Please enter a number between 2 and 4 for the number of modules.', true);
+                    return;
+                }
+                
+                // Check for duplicate selections
+                const uniqueEffects = new Set(priorityEffects);
+                if (uniqueEffects.size !== priorityEffects.length) {
+                    showStatus('You cannot select the same priority effect more than once.', true);
+                    return;
+                }
+                
+                // Validate against the original list
+                for (const effect of priorityEffects) {
+                    if (!allEffects.includes(effect)) {
+                         showStatus(`"${effect}" is not a valid priority effect. Please select from the list.`, true);
+                         return;
+                    }
+                }
+
+                if (modules.length < numModules) {
+                    showStatus(`You need at least ${numModules} modules to run the calculation.`, true);
+                    return;
+                }
+
+                showStatus('Calculating...', false);
+                resultsContainer.classList.add('hidden');
+                
+                let bestCombination = null;
+                let maxScore = -1;
+                
+                const combinations = getCombinations(modules, numModules);
+                
+                for (let i = 0; i < combinations.length; i++) {
+                    const combination = combinations[i];
+                    const score = calculateScore(combination, priorityEffects);
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestCombination = combination;
+                    }
+                }
+                
+                displayResults(bestCombination, maxScore, priorityEffects);
+            }
+
+            function displayResults(bestCombination, maxScore, priorityEffects) {
+                if (!bestCombination) {
+                    showStatus('Could not find a valid combination. Please check your data.', true);
+                    return;
+                }
+
+                totalScoreElem.textContent = `Total Score: ${maxScore}`;
+                moduleListElem.innerHTML = '';
+                combinedEffectsListElem.innerHTML = '';
+
+                // Display optimal modules
+                bestCombination.forEach(module => {
+                    const moduleCard = document.createElement('div');
+                    moduleCard.className = 'bg-white p-3 rounded-lg shadow-md';
+                    const effectsString = module.effects.map(e => `${e.name} (${e.level})`).join(' | ');
+                    moduleCard.innerHTML = `<p class="font-semibold">${module.id}</p><p class="text-sm text-gray-500">${effectsString}</p>`;
+                    moduleListElem.appendChild(moduleCard);
+                });
+
+                // Display combined effects
+                const combinedEffects = getCombinedEffects(bestCombination);
+                const allEffects = Object.keys(combinedEffects).map(effectName => [effectName, combinedEffects[effectName]]);
+                allEffects.forEach(([name, level]) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${name}: ${level}`;
+                    if (priorityEffects.includes(name)) {
+                        li.className = 'font-bold text-green-700';
+                    }
+                    combinedEffectsListElem.appendChild(li);
+                });
+
+                showStatus(`Calculation complete! Found optimal setup with a total score of ${maxScore}.`);
+                resultsContainer.classList.remove('hidden');
+            }
+
+            function showStatus(message, isError = false) {
+                statusMessage.textContent = message;
+                statusMessage.className = isError ? 'text-red-500' : 'text-gray-500';
+                if (message === 'Calculating...') {
+                    statusMessage.innerHTML += ' <span class="loader ml-2 inline-block"></span>';
+                }
+            }
+            
+            // --- Helper Functions from your original script, translated to JS ---
+            function calculateScore(combination, priorityEffects) {
+                const combinedEffects = getCombinedEffects(combination);
+                let totalScore = 0;
+                const tierScores = { '1': 1, '4': 4, '8': 8, '12': 12, '16': 16, '20': 20 };
+                const PRIORITY_MULTIPLIERS = [10, 7, 5, 3, 2];
+                let combinedLevelSum = 0;
+
+                for (const effectName in combinedEffects) {
+                    const level = combinedEffects[effectName];
+                    combinedLevelSum += level;
+
+                    let effectScore = 0;
+                    if (level >= 20) effectScore = tierScores['20'];
+                    else if (level >= 16) effectScore = tierScores['16'];
+                    else if (level >= 12) effectScore = tierScores['12'];
+                    else if (level >= 8) effectScore = tierScores['8'];
+                    else if (level >= 4) effectScore = tierScores['4'];
+                    else if (level >= 1) effectScore = tierScores['1'];
+                    
+                    const priorityIndex = priorityEffects.indexOf(effectName);
+                    if (priorityIndex !== -1 && priorityIndex < PRIORITY_MULTIPLIERS.length) {
+                        effectScore *= PRIORITY_MULTIPLIERS[priorityIndex];
+                    }
+                    totalScore += effectScore;
+                }
+
+                // Add bonus if the "Optimize total level" checkbox is checked
+                if (optimizeTotalLevelCheckbox.checked) {
+                    // A simple way to add the sum of all levels to the score.
+                    // This gives a bonus for a higher overall sum of effects.
+                    totalScore += combinedLevelSum;
+                }
+
+                return totalScore;
+            }
+
+            function getCombinedEffects(combination) {
+                const combinedEffects = {};
+                combination.forEach(module => {
+                    module.effects.forEach(effect => {
+                        if (effect.name && effect.level) {
+                            if (!combinedEffects[effect.name]) {
+                                combinedEffects[effect.name] = 0;
+                            }
+                            combinedEffects[effect.name] += effect.level;
+                        }
+                    });
+                });
+                return combinedEffects;
+            }
+
+            function getCombinations(arr, k) {
+                const result = [];
+                function backtrack(start, combo) {
+                    if (combo.length === k) {
+                        result.push([...combo]);
+                        return;
+                    }
+                    for (let i = start; i < arr.length; i++) {
+                        combo.push(arr[i]);
+                        backtrack(i + 1, combo);
+                        combo.pop();
+                    }
+                }
+                backtrack(0, []);
+                return result;
+            }
+            
+            setupDropdowns();
+        });
